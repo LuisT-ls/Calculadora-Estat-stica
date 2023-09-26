@@ -15,7 +15,8 @@ Este projeto consiste em uma calculadora estatística desenvolvida como parte da
 
 ## Requisitos
 
-Para executar o código, você precisa de um ambiente de desenvolvimento C++ que inclua o compilador g++ e a biblioteca Gnuplot. Certifique-se de que esses requisitos estejam instalados no seu sistema antes de prosseguir.
+Para executar o código, você precisa de um ambiente de desenvolvimento C++ que inclua o compilador g++,
+a biblioteca Gnuplot e Boost C++. Certifique-se de que esses requisitos estejam instalados no seu sistema antes de prosseguir.
 
 ## Melhorias Propostas
 
