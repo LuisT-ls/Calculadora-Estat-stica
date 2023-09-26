@@ -7,6 +7,8 @@
 #include <map>
 #include <fstream>
 #include <cstdlib> // Para usar a função system
+#include <boost/math/distributions/students_t.hpp>
+#include <boost/math/distributions/normal.hpp>
 
 using namespace std;
 
@@ -185,6 +187,58 @@ int main()
     // Calcula assimetria e curtose
     double assimetria = calcularAssimetria(dados);
     double curtose = calcularCurtose(dados);
+    
+    // Calcular intervalo de confiança
+    double confianca = 0.95; // Nível de confiança (por exemplo, 95%)
+    double alpha = 1 - confianca;
+
+    double soma = 0.0;
+    for (int i = 0; i < tamanho; i++) // Use tamanho em vez de dados.size()
+    {
+        soma += dados[i];
+    }
+    double media = soma / tamanho;
+
+    double somaDiferencasQuadradas = 0.0;
+    for (int i = 0; i < tamanho; i++) // Use tamanho em vez de dados.size()
+    {
+        double diferenca = dados[i] - media;
+        somaDiferencasQuadradas += diferenca * diferenca;
+    }
+    double variancia = somaDiferencasQuadradas / (tamanho - 1);
+    double desvioPadraoAmostra = sqrt(variancia);
+    double erroPadrao = desvioPadraoAmostra / sqrt(tamanho);
+
+    boost::math::normal_distribution<double> distribuicaoNormal;
+    double z_score = boost::math::quantile(boost::math::complement(distribuicaoNormal, alpha / 2));
+
+    double limiteInferior = media - z_score * erroPadrao;
+    double limiteSuperior = media + z_score * erroPadrao;
+
+    cout << "\n\nIntervalo de Confiança (" << confianca * 100 << "%): [" << limiteInferior << ", " << limiteSuperior << "]" << endl;
+
+    // Realizar um teste de hipótese para a média da amostra
+    double valorHipoteseNula = 50.0; // Valor da hipótese nula
+    double estatisticaTeste = (media - valorHipoteseNula) / (desvioPadraoAmostra / sqrt(tamanho));
+
+    int grausDeLiberdade = tamanho - 1; // Graus de liberdade para um teste t de duas caudas
+    boost::math::students_t_distribution<double> distribuicaoT(grausDeLiberdade);
+
+    double p_valor = 2 * boost::math::cdf(boost::math::complement(distribuicaoT, abs(estatisticaTeste)));
+
+    cout << "Estatística de Teste: " << estatisticaTeste << endl;
+    cout << "Graus de Liberdade: " << grausDeLiberdade << endl;
+    cout << "Valor-p: " << p_valor << endl;
+
+    double nivelSignificancia = 0.05; // Nível de significância (por exemplo, 5%)
+    if (p_valor < nivelSignificancia)
+    {
+        cout << "Rejeitar a hipótese nula" << endl;
+    }
+    else
+    {
+        cout << "Não rejeitar a hipótese nula" << endl;
+    }
 
     cout << endl;
 
@@ -229,12 +283,12 @@ int main()
     }
     cout << "---------------------------------------------------------------------------------------------------------------------" << endl;
 
-    double soma = 0.0;
-    for (int i = 0; i < tamanho; i++) // Use tamanho em vez de dados.size()
-    {
-        soma += dados[i];
-    }
-    double media = soma / tamanho;
+    cout << "\nNúmero de Classes: " << numClasses << endl;
+    cout << "Tamanho da Amostra: " << tamanho << endl;
+    cout << "Amplitude Total: " << setprecision(2) << amplitudeTotal << endl;
+
+    // Exibir a mediana e a moda
+    cout << "Média: " << setprecision(2) << media << endl;
 
     double mediana;
     if (tamanho % 2 == 0)
@@ -246,25 +300,11 @@ int main()
         mediana = dados[tamanho / 2];
     }
 
+    cout << "Mediana: " << setprecision(2) << mediana << endl;
+
     // Calcular a moda
     vector<double> modas = calcularModa(dados);
 
-    double somaDiferencasQuadradas = 0.0;
-    for (int i = 0; i < tamanho; i++) // Use tamanho em vez de dados.size()
-    {
-        double diferenca = dados[i] - media;
-        somaDiferencasQuadradas += diferenca * diferenca;
-    }
-    double variancia = somaDiferencasQuadradas / tamanho;
-    double desvioPadrao = sqrt(variancia);
-
-    cout << "\nNúmero de Classes: " << numClasses << endl;
-    cout << "Tamanho da Amostra: " << tamanho << endl;
-    cout << "Amplitude Total: " << setprecision(2) << amplitudeTotal << endl;
-
-    // Exibir a mediana e a moda
-    cout << "Média: " << setprecision(2) << media << endl;
-    cout << "Mediana: " << setprecision(2) << mediana << endl;
     if (!modas.empty())
     {
         cout << "Moda: ";
@@ -300,7 +340,7 @@ int main()
         cout << "Moda: Essa amostra é amodal." << endl;
     }
 
-    cout << "Desvio Padrão: " << setprecision(2) << desvioPadrao << endl;
+    cout << "Desvio Padrão: " << setprecision(2) << desvioPadraoAmostra << endl;
     cout << "Variância: " << setprecision(2) << variancia << endl;
     cout << "Assimetria: " << setprecision(2) << assimetria << endl;
     cout << "Curtose: " << setprecision(2) << curtose << endl;
